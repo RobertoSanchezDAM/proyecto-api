@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -90,7 +91,7 @@ fun ListaScreen(cantante: String, viewModel: ListaViewModel, onBack: () -> Unit,
             ) {
                 CircularProgressIndicator(color = Color.Green)
             }
-        } else {
+        } else if (cantanteImagen != null) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -210,6 +211,28 @@ fun ListaScreen(cantante: String, viewModel: ListaViewModel, onBack: () -> Unit,
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp)) // Espaciado opcional
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column (
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = "Artista no encontrado.",
+                        color = Color.Gray,
+                        fontSize = 18.sp
+                    )
+
+                    Text(
+                        text = "Vuelva a intentarlo.",
+                        color = Color.Gray,
+                        fontSize = 18.sp
+                    )
                 }
             }
         }
