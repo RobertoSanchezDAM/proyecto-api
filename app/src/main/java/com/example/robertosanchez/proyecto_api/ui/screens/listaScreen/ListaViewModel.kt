@@ -25,9 +25,6 @@ class ListaViewModel(private var cantante: String) : ViewModel() {
     val itemsPorPagina = 5
     var paginaActual = 0
 
-    val _error: MutableLiveData<Boolean> = MutableLiveData(false)
-    val error: LiveData<Boolean> = _error
-
     init {
         cargarDatos(cantante)
     }
