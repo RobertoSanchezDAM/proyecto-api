@@ -14,7 +14,7 @@
         android:theme="@style/Theme.Proyectoapi"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.robertosanchez.proyectoapi.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Proyectoapi">
@@ -25,5 +25,14 @@
             </intent-filter>
         </activity>
     </application>
+
+    <!-- Configuración de Firebase -->
+    <meta-data
+        android:name="com.google.firebase.auth.api.gms.core.api_key"
+        android:value="@string/default_web_client_id" />
+    <!-- Configuración de Google Sign-In -->
+    <meta-data
+        android:name="com.google.android.gms.auth.api.credentials.CLIENT_ID"
+        android:value="@string/default_web_client_id" />
 
 </manifest>
