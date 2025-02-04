@@ -2,6 +2,7 @@ package com.example.robertosanchez.proyectoapi.ui.screens.usuarioScreen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,8 +71,12 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
                                 contentDescription = "Imagen",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .clip(CircleShape)
+                                    .padding(end = 8.dp)
                                     .size(40.dp)
+                                    .clip(CircleShape)
+                                    .border(1.dp, Color.Black, CircleShape)
+                                    .padding(1.dp)
+
                             )
                         } else {
                             Image(
@@ -79,23 +86,25 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
                                     .padding(end = 8.dp)
                                     .size(40.dp)
                                     .clip(CircleShape)
+                                    .border(2.dp, Color.Black, CircleShape)
+                                    .padding(1.dp)
+
                             )
+
+                            Spacer(modifier = Modifier.width(2.dp))
 
                         }
                         Column {
                             Text(
                                 text = user?.displayName ?: "Anónimo",
-                                fontSize = 20.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
 
                             Text(
-                                text =  user?.email ?: "Sin correo",
-                                fontSize = 12.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
+                                text = user?.email ?: "Sin correo",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = Color.Black
                             )
                         }
@@ -134,7 +143,7 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
             }
 
             Text(
-                text = "Home",
+                text = "Por implementar",
                 modifier = Modifier.align(Alignment.Center)
             )
         }
