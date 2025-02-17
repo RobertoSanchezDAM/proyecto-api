@@ -31,10 +31,10 @@ import com.example.robertosanchez.proyectoapi.db.Song
 @Composable
 fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit, viewModel: UsuarioViewModel) {
     var showDialog by remember { mutableStateOf<DialogType?>(null) }
+    var selectedSong by remember { mutableStateOf<Song?>(null) }
     val user = auth.getCurrentUser()
     val uiState by viewModel.uiState.collectAsState()
 
-    // Filtrar canciones para que solo se muestren las del usuario actual
     val userSongs = uiState.songs.filter { it.userId == user?.uid }
 
     Scaffold(
@@ -45,7 +45,6 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit, viewModel: Usu
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Imagen de perfil
                         if (user?.photoUrl != null) {
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
@@ -72,10 +71,7 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit, viewModel: Usu
                                     .border(2.dp, Color.Black, CircleShape)
                                     .padding(1.dp)
                             )
-                            Spacer(modifier = Modifier.width(2.dp))
                         }
-
-                        // Nombre y correo
                         Column {
                             Text(
                                 text = user?.displayName ?: "Anónimo",
@@ -110,12 +106,16 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit, viewModel: Usu
                 .padding(paddingValues)
                 .background(Color(0xFF1E1E1E))
         ) {
-            // Mostrar solo las canciones del usuario actual
             LazyColumn {
                 items(userSongs) { song ->
-                    SongItem(song = song, onDelete = { songId ->
-                        viewModel.deleteSongById(songId)
-                    })
+                    SongItem(
+                        song = song,
+                        onDelete = { songId -> viewModel.deleteSongById(songId) },
+                        onEdit = { song ->
+                            selectedSong = song
+                            showDialog = DialogType.EditSong
+                        }
+                    )
                 }
             }
 
@@ -133,14 +133,13 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit, viewModel: Usu
                 )
             }
 
-            // Mostrar el diálogo correspondiente según el estado
             when (showDialog) {
                 DialogType.AddSong -> {
                     AddSongDialog(
                         onDismiss = { showDialog = null },
                         onConfirm = { title, anyo ->
                             val newSong = Song(
-                                userId = user?.uid ?: "",  // Asocia la canción con el usuario actual
+                                userId = user?.uid ?: "",
                                 title = title,
                                 anyo = anyo
                             )
@@ -148,6 +147,18 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit, viewModel: Usu
                             showDialog = null
                         }
                     )
+                }
+                DialogType.EditSong -> {
+                    selectedSong?.let { song ->
+                        EditSongDialog(
+                            song = song,
+                            onDismiss = { showDialog = null },
+                            onConfirm = { title, anyo ->
+                                viewModel.updateSong(song.copy(title = title, anyo = anyo))
+                                showDialog = null
+                            }
+                        )
+                    }
                 }
                 DialogType.Logout -> {
                     LogoutDialog(
@@ -163,6 +174,7 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit, viewModel: Usu
         }
     }
 }
+
 
 // Enum para los tipos de diálogos
 enum class DialogType {
@@ -213,14 +225,56 @@ fun AddSongDialog(onDismiss: () -> Unit, onConfirm: (String, Int) -> Unit) {
     )
 }
 
+@Composable
+fun EditSongDialog(song: Song, onDismiss: () -> Unit, onConfirm: (String, Int) -> Unit) {
+    var title by remember { mutableStateOf(song.title ?: "") }
+    var anyo by remember { mutableStateOf(song.anyo?.toString() ?: "") }
 
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1ED760),
+        title = { Text("Editar Canción", color = Color.Black) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Título") },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = anyo,
+                    onValueChange = { anyo = it },
+                    label = { Text("Año de Lanzamiento") },
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(title, anyo.toIntOrNull() ?: 0) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E1E1E))
+            ) {
+                Text("Guardar", color = Color.White)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E1E1E))
+            ) {
+                Text("Cancelar", color = Color.White)
+            }
+        }
+    )
+}
 
 @Composable
-fun SongItem(song: Song, onDelete: (String) -> Unit) {
+fun SongItem(song: Song, onDelete: (String) -> Unit, onEdit: (Song) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp), // Margen en los laterales
         colors = CardDefaults.cardColors(containerColor = Color(0xFF2E2E2E))
     ) {
         Row(
@@ -241,6 +295,18 @@ fun SongItem(song: Song, onDelete: (String) -> Unit) {
             }
 
             IconButton(
+                onClick = { onEdit(song) },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_edit),
+                    contentDescription = "Editar",
+                    tint = Color.Yellow,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            IconButton(
                 onClick = { onDelete(song.id ?: "") },
                 modifier = Modifier.size(24.dp)
             ) {
@@ -251,11 +317,9 @@ fun SongItem(song: Song, onDelete: (String) -> Unit) {
                     modifier = Modifier.size(18.dp)
                 )
             }
-
         }
     }
 }
-
 
 @Composable
 fun LogoutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {

@@ -10,25 +10,19 @@ import kotlinx.coroutines.tasks.await
 
 class FirestoreManager(auth: AuthManager, context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
-    private val userId = auth.getCurrentUser()?.uid // Obtener el userId del usuario autenticado
+    private val userId = auth.getCurrentUser()?.uid
 
-    // Obtener las canciones filtradas por el userId del usuario
     fun getTransactions(): Flow<List<Song>> {
-        return firestore
-            .collection("songs")
-            .whereEqualTo("userId", userId) // Filtrar las canciones por el userId
+        return firestore.collection("songs")
+            .whereEqualTo("userId", userId)
             .snapshots()
             .map { qs ->
                 qs.documents.mapNotNull { ds ->
-                    songDBToSong(
-                        ds.toObject(SongDB::class.java),
-                        ds.id
-                    )
+                    songDBToSong(ds.toObject(SongDB::class.java), ds.id)
                 }
             }
     }
 
-    // Convertir de SongDB a Song
     private fun songDBToSong(songDB: SongDB?, id: String) =
         Song(
             id = id,
@@ -37,22 +31,20 @@ class FirestoreManager(auth: AuthManager, context: Context) {
             anyo = songDB?.anyo,
         )
 
-    // Agregar una canción y asociarla con el userId
     suspend fun addSong(song: Song) {
-        val songWithUserId = song.copy(userId = userId) // Asociar el userId al agregar la canción
-        firestore.collection("songs").add(songWithUserId).await() // Agregar la canción
+        val songWithUserId = song.copy(userId = userId)
+        firestore.collection("songs").add(songWithUserId).await()
     }
 
-    // Actualizar una canción
     suspend fun updateSong(song: Song) {
-        val songRef = song.id?.let {
-            firestore.collection("songs").document(it)
-        }
-        songRef?.set(song.copy(userId = userId))?.await() // Asegurarse de que el userId esté asociado
+        if (song.id.isNullOrEmpty()) return
+
+        val songRef = firestore.collection("songs").document(song.id)
+        songRef.set(song.copy(userId = userId)).await()
     }
 
-    // Eliminar una canción por su ID
     suspend fun deleteSongById(songId: String) {
         firestore.collection("songs").document(songId).delete().await()
     }
 }
+

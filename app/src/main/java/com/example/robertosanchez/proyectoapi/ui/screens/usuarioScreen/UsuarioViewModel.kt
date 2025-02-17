@@ -16,7 +16,7 @@ class UsuarioViewModel(private val firestore: FirestoreManager) : ViewModel() {
     init {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            firestore.getTransactions().collect() { songs ->
+            firestore.getTransactions().collect { songs ->
                 _uiState.update { uiState ->
                     uiState.copy(songs = songs, isLoading = false)
                 }
@@ -24,15 +24,11 @@ class UsuarioViewModel(private val firestore: FirestoreManager) : ViewModel() {
         }
     }
 
-
     fun addSong(song: Song) {
         viewModelScope.launch {
             firestore.addSong(song)
-            // Después de agregar la canción, actualizamos la lista
             firestore.getTransactions().collect { songs ->
-                _uiState.update { uiState ->
-                    uiState.copy(songs = songs)
-                }
+                _uiState.update { uiState -> uiState.copy(songs = songs) }
             }
         }
     }
@@ -41,11 +37,17 @@ class UsuarioViewModel(private val firestore: FirestoreManager) : ViewModel() {
         if (songId.isEmpty()) return
         viewModelScope.launch {
             firestore.deleteSongById(songId)
-            // Actualizar la lista después de eliminar la canción
             firestore.getTransactions().collect { songs ->
-                _uiState.update { uiState ->
-                    uiState.copy(songs = songs)
-                }
+                _uiState.update { uiState -> uiState.copy(songs = songs) }
+            }
+        }
+    }
+
+    fun updateSong(song: Song) {
+        viewModelScope.launch {
+            firestore.updateSong(song)  // Llamada a Firestore para actualizar la canción
+            firestore.getTransactions().collect { songs ->
+                _uiState.update { uiState -> uiState.copy(songs = songs) }
             }
         }
     }
