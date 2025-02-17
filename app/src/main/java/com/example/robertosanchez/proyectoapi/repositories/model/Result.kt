@@ -1,5 +1,7 @@
 package com.example.robertosanchez.proyectoapi.repositories.model
 
+import com.example.robertosanchez.proyectoapi.db.SongDB
+
 data class Result(
     val annotation_count: Int,
     val api_path: String,

@@ -3,35 +3,15 @@ package com.example.robertosanchez.proyectoapi.ui.screens.usuarioScreen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,21 +20,24 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.robertosanchez.proyectoapi.R
 import com.example.robertosanchez.proyectoapi.data.AuthManager
+import com.example.robertosanchez.proyectoapi.db.Song
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
-    var showDialog by remember { mutableStateOf(false) }
+fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit, viewModel: UsuarioViewModel) {
+    var showDialog by remember { mutableStateOf<DialogType?>(null) }
     val user = auth.getCurrentUser()
+    val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold (
+    // Filtrar canciones para que solo se muestren las del usuario actual
+    val userSongs = uiState.songs.filter { it.userId == user?.uid }
+
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = {
@@ -62,10 +45,11 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if(user?.photoUrl != null){
+                        // Imagen de perfil
+                        if (user?.photoUrl != null) {
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
-                                    .data(user?.photoUrl)
+                                    .data(user.photoUrl)
                                     .crossfade(true)
                                     .build(),
                                 contentDescription = "Imagen",
@@ -76,7 +60,6 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
                                     .clip(CircleShape)
                                     .border(1.dp, Color.Black, CircleShape)
                                     .padding(1.dp)
-
                             )
                         } else {
                             Image(
@@ -88,12 +71,11 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
                                     .clip(CircleShape)
                                     .border(2.dp, Color.Black, CircleShape)
                                     .padding(1.dp)
-
                             )
-
                             Spacer(modifier = Modifier.width(2.dp))
-
                         }
+
+                        // Nombre y correo
                         Column {
                             Text(
                                 text = user?.displayName ?: "Anónimo",
@@ -101,7 +83,6 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
-
                             Text(
                                 text = user?.email ?: "Sin correo",
                                 style = MaterialTheme.typography.bodySmall,
@@ -112,10 +93,7 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1ED760)),
                 actions = {
-                    IconButton(
-                        onClick = {
-                        showDialog = true }
-                    ) {
+                    IconButton(onClick = { showDialog = DialogType.Logout }) {
                         Icon(
                             Icons.AutoMirrored.Outlined.ExitToApp,
                             contentDescription = "Cerrar sesión",
@@ -125,73 +103,181 @@ fun UsuarioScreen(auth: AuthManager, navigateToLogin: () -> Unit) {
                 }
             )
         }
-    ){
+    ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize()
-                .padding(it)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
                 .background(Color(0xFF1E1E1E))
-        ){
-            if (showDialog){
-                LogoutDialog(
-                    onDismiss = { showDialog = false },
-                    onConfirm = {
-                        auth.signOut()
-                        navigateToLogin()
-                        showDialog = false
-                    }
+        ) {
+            // Mostrar solo las canciones del usuario actual
+            LazyColumn {
+                items(userSongs) { song ->
+                    SongItem(song = song, onDelete = { songId ->
+                        viewModel.deleteSongById(songId)
+                    })
+                }
+            }
+
+            FloatingActionButton(
+                onClick = { showDialog = DialogType.AddSong },
+                containerColor = Color(0xFF1ED760),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Agregar Canción",
+                    tint = Color.Black
                 )
             }
 
-            Text(
-                text = "Por implementar",
-                modifier = Modifier.align(Alignment.Center)
-            )
+            // Mostrar el diálogo correspondiente según el estado
+            when (showDialog) {
+                DialogType.AddSong -> {
+                    AddSongDialog(
+                        onDismiss = { showDialog = null },
+                        onConfirm = { title, anyo ->
+                            val newSong = Song(
+                                userId = user?.uid ?: "",  // Asocia la canción con el usuario actual
+                                title = title,
+                                anyo = anyo
+                            )
+                            viewModel.addSong(newSong)
+                            showDialog = null
+                        }
+                    )
+                }
+                DialogType.Logout -> {
+                    LogoutDialog(
+                        onDismiss = { showDialog = null },
+                        onConfirm = {
+                            auth.signOut()
+                            navigateToLogin()
+                        }
+                    )
+                }
+                else -> Unit
+            }
         }
     }
 }
+
+// Enum para los tipos de diálogos
+enum class DialogType {
+    AddSong, Logout, EditSong
+}
+
+@Composable
+fun AddSongDialog(onDismiss: () -> Unit, onConfirm: (String, Int) -> Unit) {
+    var title by remember { mutableStateOf("") }
+    var anyo by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1ED760),
+        title = { Text("Agregar Canción", color = Color.Black) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Título") },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = anyo,
+                    onValueChange = { anyo = it },
+                    label = { Text("Año de Lanzamiento") },
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(title, anyo.toIntOrNull() ?: 0) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E1E1E))
+            ) {
+                Text("Aceptar", color = Color.White)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E1E1E))
+            ) {
+                Text("Cancelar", color = Color.White)
+            }
+        }
+    )
+}
+
+
+
+@Composable
+fun SongItem(song: Song, onDelete: (String) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2E2E2E))
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = song.title ?: "Sin título",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = song.anyo?.toString() ?: "Año no disponible",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            IconButton(
+                onClick = { onDelete(song.id ?: "") },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_delete),
+                    contentDescription = "Eliminar",
+                    tint = Color.Red,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+        }
+    }
+}
+
 
 @Composable
 fun LogoutDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF1ED760),
-        title = {
-            Text("Cerrar Sesión",
-                color = Color.Black,
-            )
-        },
-
-        text = {
-            Text(
-                "¿Estás seguro de que deseas cerrar sesión?",
-                color = Color.Black,
-            )
-        },
-
+        title = { Text("Cerrar Sesión", color = Color.Black) },
+        text = { Text("¿Estás seguro de que deseas cerrar sesión?", color = Color.Black) },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E1E1E)
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E1E1E))
             ) {
-                Text(
-                    "Aceptar",
-                    color = Color.White,
-                )
+                Text("Aceptar", color = Color.White)
             }
         },
         dismissButton = {
             Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1E1E1E)
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E1E1E))
             ) {
-                Text(
-                    "Cancelar",
-                    color = Color.White,
-                )
+                Text("Cancelar", color = Color.White)
             }
         }
     )

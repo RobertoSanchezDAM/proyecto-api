@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
     implementation(libs.play.services)
+    implementation(libs.firestore)
 
     //Retrofit
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
@@ -77,4 +78,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
 }

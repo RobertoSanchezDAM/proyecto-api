@@ -2,11 +2,13 @@ package com.example.robertosanchez.proyectoapi.ui.navegacion
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.robertosanchez.proyectoapi.data.AuthManager
+import com.example.robertosanchez.proyectoapi.db.FirestoreManager
 import com.example.robertosanchez.proyectoapi.ui.screens.buscarScreen.BuscarScreen
 import com.example.robertosanchez.proyectoapi.ui.screens.contrasenaOlvScreen.ContrasenaOlvScreen
 import com.example.robertosanchez.proyectoapi.ui.screens.detailScreen.DetailScreen
@@ -16,6 +18,9 @@ import com.example.robertosanchez.proyectoapi.ui.screens.listaScreen.ListaViewMo
 import com.example.robertosanchez.proyectoapi.ui.screens.loginScreen.LoginScreen
 import com.example.robertosanchez.proyectoapi.ui.screens.usuarioScreen.UsuarioScreen
 import com.example.robertosanchez.proyectoapi.ui.screens.registroScreen.RegistroScreen
+import com.example.robertosanchez.proyectoapi.ui.screens.usuarioScreen.UsuarioViewModel
+import com.example.robertosanchez.proyectoapi.ui.screens.usuarioScreen.UsuarioViewModelFactory
+
 
 @Composable
 fun Navegacion(auth: AuthManager) {
@@ -61,9 +66,17 @@ fun Navegacion(auth: AuthManager) {
         }
 
         composable<Usuario> {
-            UsuarioScreen (
-                auth,
-                { navController.navigate(Login) }
+            val context = LocalContext.current
+            val firestoreManager = FirestoreManager(auth, context)
+
+            val usuarioViewModel: UsuarioViewModel = viewModel(
+                factory = UsuarioViewModelFactory(firestoreManager)
+            )
+
+            UsuarioScreen(
+                auth = auth,
+                navigateToLogin = { navController.navigate(Login) },
+                viewModel = usuarioViewModel
             )
         }
 
