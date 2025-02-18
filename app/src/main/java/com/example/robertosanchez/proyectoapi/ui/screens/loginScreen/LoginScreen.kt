@@ -21,9 +21,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -47,6 +50,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.example.robertosanchez.proyectoapi.R
 import com.example.robertosanchez.proyectoapi.data.AuthManager
 import com.example.robertosanchez.proyectoapi.data.AuthRes
@@ -63,6 +67,7 @@ fun LoginScreen(
     navigateToSignUp: () -> Unit,
     navigateToUsuario: () -> Unit,
     navigateToContraseñaOlv: () -> Unit,
+    onBack: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -106,6 +111,18 @@ fun LoginScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .zIndex(1f)
+        ) {
+            Icon(
+                Icons.Filled.ArrowBack,
+                contentDescription = "Atrás",
+                tint = Color.White
+            )
+        }
         // Imagen de fondo
         Image(
             painter = painterResource(id = R.drawable.pxfuel),

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
@@ -116,9 +117,11 @@ fun DetailScreen(mediaId: Int, cantante: String, onBack: () -> Unit, navigateToL
                             .size(56.dp)
                             .clip(CircleShape)
                     ) {
-                        Icon(Icons.Default.PlayArrow,
-                            contentDescription = "Reproducir",
-                            tint = Color.Black)
+                        Icon(Icons.Default.Info,
+                            contentDescription = "Abrir pagina",
+                            tint = Color.Black,
+                            modifier = Modifier
+                                .size(32.dp))
                     }
                 }
 

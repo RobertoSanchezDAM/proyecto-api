@@ -48,7 +48,8 @@ fun Navegacion(auth: AuthManager) {
                         popUpTo(Login) { inclusive = true }
                     }
                 },
-                { navController.navigate(ContraseñaOlv) }
+                { navController.navigate(ContraseñaOlv) },
+                { navController.popBackStack() }
             )
         }
 
@@ -81,9 +82,11 @@ fun Navegacion(auth: AuthManager) {
         }
 
         composable<Buscar> {
-            BuscarScreen { cantante ->
-                navController.navigate(Lista(cantante))
-            }
+            BuscarScreen (
+                onBack = {navController.popBackStack() },
+                onNavigateToLista = { cantante ->
+                    navController.navigate(Lista(cantante)) }
+                )
         }
 
         composable<Lista> {backStackEntry ->
