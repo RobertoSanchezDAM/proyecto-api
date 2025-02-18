@@ -12,7 +12,8 @@ class FirestoreManager(auth: AuthManager, context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
     private val userId = auth.getCurrentUser()?.uid
 
-    fun getTransactions(): Flow<List<Song>> {
+    // Canciones
+    fun getSongsTransactions(): Flow<List<Song>> {
         return firestore.collection("songs")
             .whereEqualTo("userId", userId)
             .snapshots()
@@ -45,6 +46,44 @@ class FirestoreManager(auth: AuthManager, context: Context) {
 
     suspend fun deleteSongById(songId: String) {
         firestore.collection("songs").document(songId).delete().await()
+    }
+
+    // Albumes
+
+    fun getAlbumsTransactions(): Flow<List<Album>> {
+        return firestore.collection("albums")
+            .whereEqualTo("userId", userId)
+            .snapshots()
+            .map { qs ->
+                qs.documents.mapNotNull { ds ->
+                    albumDBToAlbum(ds.toObject(AlbumDB::class.java), ds.id)
+                }
+            }
+    }
+
+    private fun albumDBToAlbum(albumDB: AlbumDB?, id: String) =
+        Album(
+            id = id,
+            userId = albumDB?.userId,
+            title = albumDB?.title,
+            anyo = albumDB?.anyo,
+            numCanciones = albumDB?.numCanciones
+        )
+
+    suspend fun addAlbum(album: Album) {
+        val songWithUserId = album.copy(userId = userId)
+        firestore.collection("albums").add(songWithUserId).await()
+    }
+
+    suspend fun updateAlbum(album: Album) {
+        if (album.id.isNullOrEmpty()) return
+
+        val albumRef = firestore.collection("albums").document(album.id)
+        albumRef.set(album.copy(userId = userId)).await()
+    }
+
+    suspend fun deleteAlbumById(albumId: String) {
+        firestore.collection("albums").document(albumId).delete().await()
     }
 }
 
